@@ -1,0 +1,102 @@
+{% extends "base.html" %}{% block title %}Admin Dashboard — Smart College Assistant{% endblock %}
+{% block content %}
+<div class="dashboard-page">
+  <div id="dashLoader" class="dash-loader"><div class="spinner-border text-primary"></div></div>
+  <div class="container-fluid px-4 py-4">
+    <div class="dash-header mb-4">
+      <div>
+        <h1 class="dash-title">🛡️ Admin Dashboard</h1>
+        <p class="dash-subtitle">Smart College Management Portal</p>
+      </div>
+      <div class="dash-header-actions">
+        <a href="/chatbot" class="btn-primary-glow btn-sm"><i class="bi bi-robot me-1"></i>AI Assistant</a>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-4" id="adminKPIs">
+      <div class="col-12 text-center py-3"><div class="spinner-border text-primary"></div></div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="row g-3 mb-4">
+      {% set quickLinks = [
+        ("/admission","bi-file-earmark-person","Admissions","primary"),
+        ("/placement","bi-briefcase","Placements","success"),
+        ("/notifications","bi-bell","Notifications","warning"),
+        ("/upload","bi-cloud-upload","Upload Docs","info"),
+        ("/chatbot","bi-robot","AI Chatbot","purple"),
+        ("/smart-tools","bi-calculator","Smart Tools","cyan"),
+      ] %}
+      {% for link in quickLinks %}
+      <div class="col-xl-2 col-md-4 col-6">
+        <a href="{{ link[0] }}" class="feature-card feature-card-{{ link[3] }} text-decoration-none text-center p-3">
+          <div class="feature-icon mx-auto mb-2"><i class="bi {{ link[1] }}"></i></div>
+          <div class="feature-title" style="font-size:0.85rem">{{ link[2] }}</div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="row g-4">
+      <div class="col-xl-6">
+        <div class="dash-card">
+          <div class="dash-card-header"><h6 class="dash-card-title"><i class="bi bi-bell me-2"></i>Recent Notifications</h6>
+          <a href="/notifications" class="card-link">View All</a></div>
+          <div class="dash-card-body" id="adminNotifs"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+        </div>
+      </div>
+      <div class="col-xl-6">
+        <div class="dash-card">
+          <div class="dash-card-header"><h6 class="dash-card-title"><i class="bi bi-briefcase me-2"></i>Upcoming Drives</h6>
+          <a href="/placement" class="card-link">View All</a></div>
+          <div class="dash-card-body" id="adminDrives"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}<script>
+async function loadAdminDashboard() {
+  try {
+    const [adminRes, notifRes, drivesRes] = await Promise.all([
+      fetch('/api/dashboard/admin', {credentials:'include'}),
+      fetch('/api/notifications/?category=all'),
+      fetch('/api/placement/drives'),
+    ]);
+    const adminData = await adminRes.json();
+    const notifData = await notifRes.json();
+    const drivesData = await drivesRes.json();
+
+    document.getElementById('dashLoader').classList.add('hidden');
+
+    if (adminData.success) {
+      const s = adminData.stats;
+      document.getElementById('adminKPIs').innerHTML = `
+        <div class="col-xl-2 col-md-4 col-6"><div class="kpi-card kpi-primary"><div class="kpi-icon"><i class="bi bi-people-fill"></i></div><div class="kpi-content"><div class="kpi-value">${s.total_students}</div><div class="kpi-label">Students</div></div></div></div>
+        <div class="col-xl-2 col-md-4 col-6"><div class="kpi-card kpi-success"><div class="kpi-icon"><i class="bi bi-person-badge"></i></div><div class="kpi-content"><div class="kpi-value">${s.total_faculty}</div><div class="kpi-label">Faculty</div></div></div></div>
+        <div class="col-xl-2 col-md-4 col-6"><div class="kpi-card kpi-warning"><div class="kpi-icon"><i class="bi bi-briefcase"></i></div><div class="kpi-content"><div class="kpi-value">${s.placed_students}</div><div class="kpi-label">Placed</div></div></div></div>
+        <div class="col-xl-2 col-md-4 col-6"><div class="kpi-card kpi-info"><div class="kpi-icon"><i class="bi bi-bell"></i></div><div class="kpi-content"><div class="kpi-value">${s.active_notifications}</div><div class="kpi-label">Notifications</div></div></div></div>
+        <div class="col-xl-2 col-md-4 col-6"><div class="kpi-card kpi-primary"><div class="kpi-icon"><i class="bi bi-file-earmark-person"></i></div><div class="kpi-content"><div class="kpi-value">${s.pending_admissions}</div><div class="kpi-label">Pending Admissions</div></div></div></div>
+        <div class="col-xl-2 col-md-4 col-6"><div class="kpi-card kpi-success"><div class="kpi-icon"><i class="bi bi-people"></i></div><div class="kpi-content"><div class="kpi-value">${s.total_users}</div><div class="kpi-label">Users</div></div></div></div>
+      `;
+    }
+
+    if (notifData.success) {
+      document.getElementById('adminNotifs').innerHTML = notifData.notifications.slice(0,5).map(n => `
+        <div class="notif-card mb-2"><div class="fw-bold" style="font-size:0.85rem">${n.title}</div>
+        <small class="text-muted">${n.category} · ${new Date(n.created_at).toLocaleDateString()}</small></div>`).join('');
+    }
+
+    if (drivesData.success) {
+      document.getElementById('adminDrives').innerHTML = drivesData.drives.slice(0,4).map(d => `
+        <div class="drive-card mb-2">
+          <div class="drive-company">${d.company}</div>
+          <div style="font-size:0.78rem;color:var(--text-secondary)">${d.role} · ${d.date}</div>
+        </div>`).join('');
+    }
+  } catch(e) { console.error(e); document.getElementById('dashLoader').classList.add('hidden'); }
+}
+loadAdminDashboard();
+</script>{% endblock %}

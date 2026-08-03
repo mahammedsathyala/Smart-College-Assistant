@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard — Smart College Assistant{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+  <!-- Loading overlay -->
+  <div id="dashLoader" class="dash-loader">
+    <div class="spinner-border text-primary"></div>
+  </div>
+
+  <div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="dash-header mb-4">
+      <div>
+        <h1 class="dash-title" id="welcomeText">Good Day! 👋</h1>
+        <p class="dash-subtitle" id="studentInfo">Loading your dashboard...</p>
+      </div>
+      <div class="dash-header-actions">
+        <button class="btn-icon-sm" onclick="refreshDashboard()"><i class="bi bi-arrow-clockwise"></i></button>
+        <a href="/chatbot" class="btn-primary-glow btn-sm"><i class="bi bi-robot me-1"></i>Ask AI</a>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4" id="kpiCards">
+      <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-primary">
+          <div class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></div>
+          <div class="kpi-content">
+            <div class="kpi-value" id="kpiCgpa">—</div>
+            <div class="kpi-label">CGPA</div>
+          </div>
+          <div class="kpi-trend" id="kpiCgpaTrend"></div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-success">
+          <div class="kpi-icon"><i class="bi bi-person-check"></i></div>
+          <div class="kpi-content">
+            <div class="kpi-value" id="kpiAttendance">—</div>
+            <div class="kpi-label">Attendance %</div>
+          </div>
+          <div class="kpi-badge" id="kpiAttBadge"></div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-warning">
+          <div class="kpi-icon"><i class="bi bi-exclamation-triangle"></i></div>
+          <div class="kpi-content">
+            <div class="kpi-value" id="kpiAtRisk">—</div>
+            <div class="kpi-label">At-Risk Subjects</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-info">
+          <div class="kpi-icon"><i class="bi bi-briefcase"></i></div>
+          <div class="kpi-content">
+            <div class="kpi-value" id="kpiPlacement">—</div>
+            <div class="kpi-label">Placement Status</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="row g-4">
+
+      <!-- Attendance Chart -->
+      <div class="col-xl-6">
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <h6 class="dash-card-title"><i class="bi bi-bar-chart me-2"></i>Attendance by Subject</h6>
+          </div>
+          <div class="dash-card-body">
+            <canvas id="attendanceChart" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Marks Chart -->
+      <div class="col-xl-6">
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <h6 class="dash-card-title"><i class="bi bi-award me-2"></i>Internal Marks</h6>
+          </div>
+          <div class="dash-card-body">
+            <canvas id="marksChart" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timetable Today -->
+      <div class="col-xl-4">
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <h6 class="dash-card-title"><i class="bi bi-calendar-day me-2"></i>Today's Schedule</h6>
+            <span class="badge-today" id="todayBadge"></span>
+          </div>
+          <div class="dash-card-body" id="todaySchedule">
+            <div class="text-muted text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="col-xl-4">
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <h6 class="dash-card-title"><i class="bi bi-bell me-2"></i>Latest Notifications</h6>
+            <a href="/notifications" class="card-link">View All</a>
+          </div>
+          <div class="dash-card-body" id="latestNotifications">
+            <div class="text-muted text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Drives -->
+      <div class="col-xl-4">
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <h6 class="dash-card-title"><i class="bi bi-briefcase me-2"></i>Upcoming Drives</h6>
+            <a href="/placement" class="card-link">View All</a>
+          </div>
+          <div class="dash-card-body" id="upcomingDrives">
+            <div class="text-muted text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row -->
+  </div><!-- /container -->
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

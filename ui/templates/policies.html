@@ -1,0 +1,57 @@
+{% extends "base.html" %}{% block title %}College Policies — Smart College Assistant{% endblock %}
+{% block content %}
+<section class="page-hero policy-hero"><div class="container"><div class="page-hero-content">
+  <span class="section-badge">Rules & Regulations</span>
+  <h1 class="page-hero-title">College Policies</h1>
+  <p class="page-hero-desc">Know your rights and responsibilities. All college rules in one place.</p>
+</div></div></section>
+<section class="section-pad"><div class="container">
+  <div class="row g-4">
+    <div class="col-lg-3">
+      <div class="content-card sticky-top" style="top:80px">
+        <div class="content-card-header"><h6>Categories</h6></div>
+        <div class="content-card-body p-0" id="policyCategoryList">
+          <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-9" id="policyContent">
+      <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+    </div>
+  </div>
+</div></section>
+{% endblock %}
+{% block extra_scripts %}<script>
+let allPolicies = [];
+const catIcons = {attendance:'bi-person-check',exam:'bi-clipboard-check',library:'bi-book',
+  hostel:'bi-house',anti_ragging:'bi-shield-x',dress_code:'bi-person',conduct:'bi-award'};
+
+async function loadPolicies() {
+  const res = await fetch('/api/policy/');
+  const data = await res.json();
+  if (!data.success) return;
+  allPolicies = data.policies;
+  const cats = [...new Set(allPolicies.map(p => p.category))];
+
+  document.getElementById('policyCategoryList').innerHTML = cats.map((c,i) => `
+    <div class="policy-cat-item ${i===0?'active':''}" onclick="showCategory('${c}',this)">
+      <i class="bi ${catIcons[c]||'bi-file-text'} me-2"></i>${c.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}
+    </div>`).join('');
+
+  if (cats.length) showCategoryItems(allPolicies.filter(p => p.category === cats[0]));
+}
+function showCategory(cat, el) {
+  document.querySelectorAll('.policy-cat-item').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  showCategoryItems(allPolicies.filter(p => p.category === cat));
+}
+function showCategoryItems(policies) {
+  document.getElementById('policyContent').innerHTML = policies.map(p => `
+    <div class="content-card mb-4">
+      <div class="content-card-header"><h5><i class="bi ${catIcons[p.category]||'bi-file-text'} me-2"></i>${p.title}</h5>
+        <small class="text-muted">Updated: ${new Date(p.last_updated).toLocaleDateString()}</small></div>
+      <div class="content-card-body"><div class="policy-text">${p.content.replace(/\n/g,'<br/>')}</div></div>
+    </div>`).join('');
+}
+loadPolicies();
+</script>{% endblock %}

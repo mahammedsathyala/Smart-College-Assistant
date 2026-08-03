@@ -1,0 +1,70 @@
+# ============================================================
+# Smart College Assistant — .gitignore
+# ============================================================
+
+# Virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Distribution / packaging
+.eggs/
+*.egg-info/
+dist/
+build/
+
+# Environment / secrets — NEVER commit these
+.env
+*.env
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# FAISS vector store indexes
+vectorstore/faiss_index/
+*.index
+*.faiss
+
+# Logs
+logs/
+*.log
+
+# Uploads (user-uploaded documents)
+uploads/
+*.pdf
+*.docx
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# VS Code (keep .vscode/settings.json for interpreter config)
+.vscode/*
+!.vscode/settings.json
+
+# pytest / coverage
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# mypy / type checkers
+.mypy_cache/
+.pytype/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Docker (keep Dockerfile and docker-compose)

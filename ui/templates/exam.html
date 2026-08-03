@@ -1,0 +1,119 @@
+{% extends "base.html" %}{% block title %}Examinations — Smart College Assistant{% endblock %}
+{% block content %}
+<section class="page-hero exam-hero"><div class="container"><div class="page-hero-content">
+  <span class="section-badge">Academic Evaluation</span>
+  <h1 class="page-hero-title">Examinations</h1>
+  <p class="page-hero-desc">Exam schedules, hall tickets, results, grading system, and revaluation process.</p>
+</div></div></section>
+
+<section class="section-pad"><div class="container">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <!-- Exam Schedule -->
+      <div class="content-card mb-4">
+        <div class="content-card-header"><h5><i class="bi bi-calendar-check me-2"></i>End Semester Exam Schedule</h5></div>
+        <div class="content-card-body" id="examSchedule">
+          <div class="text-center py-3"><div class="spinner-border text-primary"></div></div>
+        </div>
+      </div>
+
+      <!-- Grading System -->
+      <div class="content-card mb-4">
+        <div class="content-card-header"><h5><i class="bi bi-table me-2"></i>Grading System</h5></div>
+        <div class="content-card-body">
+          <div class="table-responsive">
+            <table class="table table-dark table-hover rounded" style="background:var(--bg-secondary);">
+              <thead><tr><th>Grade</th><th>Grade Point</th><th>Marks Range</th><th>Performance</th></tr></thead>
+              <tbody>
+                {% for g in [('O',10,'91-100','Outstanding'),('A+',9,'81-90','Excellent'),('A',8,'71-80','Very Good'),('B+',7,'61-70','Good'),('B',6,'51-60','Average'),('C',5,'40-50','Satisfactory'),('F',0,'Below 40','Failed')] %}
+                <tr>
+                  <td><span class="badge" style="background:var(--accent-primary)">{{ g[0] }}</span></td>
+                  <td><strong>{{ g[1] }}.0</strong></td>
+                  <td>{{ g[2] }}</td>
+                  <td>{{ g[3] }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQs -->
+      <div class="content-card">
+        <div class="content-card-header"><h5><i class="bi bi-question-circle me-2"></i>Exam FAQs</h5></div>
+        <div class="content-card-body" id="examFaqs">
+          <div class="text-center py-3"><div class="spinner-border text-primary"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <!-- Rules -->
+      <div class="content-card mb-4">
+        <div class="content-card-header"><h5><i class="bi bi-shield-check me-2"></i>Exam Rules</h5></div>
+        <div class="content-card-body">
+          <ul style="font-size:0.85rem;color:var(--text-secondary);padding-left:16px;line-height:2;">
+            <li>Carry Hall Ticket & College ID</li>
+            <li>Arrive 15 minutes before exam</li>
+            <li>No mobile phones allowed</li>
+            <li>No electronic devices</li>
+            <li>Blue/Black pen only</li>
+            <li>No leaving before 30 minutes</li>
+          </ul>
+        </div>
+      </div>
+      <!-- Info Cards -->
+      {% set infos = [
+        ("Revaluation","Apply within 15 days of result. Fee: ₹500/subject.","bi-arrow-repeat","warning"),
+        ("Hall Ticket","Available 10 days before exam on student portal.","bi-ticket-perforated","info"),
+        ("Results","Declared within 45 days of last exam.","bi-clipboard-data","success"),
+      ] %}
+      {% for info in infos %}
+      <div class="content-card mb-3">
+        <div class="content-card-body d-flex gap-3 align-items-start">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(99,130,255,0.1);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--accent-{{ info[3] }});flex-shrink:0;">
+            <i class="bi {{ info[1] }}"></i></div>
+          <div><div class="fw-bold" style="font-size:0.9rem;color:var(--text-primary)">{{ info[0] }}</div>
+            <div style="font-size:0.82rem;color:var(--text-secondary)">{{ info[2] }}</div></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div></section>
+{% endblock %}
+{% block extra_scripts %}<script>
+async function loadExamData() {
+  const [schedRes, faqRes] = await Promise.all([
+    fetch('/api/exam/schedule'), fetch('/api/exam/faqs')
+  ]);
+  const schedule = await schedRes.json();
+  const faqs = await faqRes.json();
+
+  if (schedule.success) {
+    document.getElementById('examSchedule').innerHTML = schedule.schedule.map(s => {
+      const days = Math.max(0, Math.ceil((new Date(s.date) - new Date()) / 86400000));
+      const color = days <= 7 ? 'var(--accent-danger)' : days <= 14 ? 'var(--accent-warning)' : 'var(--accent-success)';
+      return `<div class="d-flex align-items-center justify-content-between py-2 border-bottom" style="border-color:var(--border-color)!important">
+        <div><div class="fw-bold" style="font-size:0.9rem">${s.subject}</div>
+        <small class="text-muted">${s.code} · ${s.time} · ${s.room}</small></div>
+        <div class="text-end"><div style="color:${color};font-weight:700">${s.date}</div>
+        <small style="color:${color}">${days} days left</small></div></div>`;
+    }).join('');
+  }
+
+  if (faqs.success) {
+    document.getElementById('examFaqs').innerHTML = `<div class="accordion" id="examFaqAcc">` +
+      faqs.faqs.map((f,i) => `
+      <div class="accordion-item" style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;margin-bottom:8px">
+        <h6 class="accordion-header"><button class="accordion-button collapsed" style="background:var(--bg-secondary);color:var(--text-primary);font-size:0.88rem;" type="button" data-bs-toggle="collapse" data-bs-target="#faq${i}">
+          ${f.question}</button></h6>
+        <div id="faq${i}" class="accordion-collapse collapse" data-bs-parent="#examFaqAcc">
+          <div class="accordion-body" style="font-size:0.85rem;color:var(--text-secondary)">${f.answer}</div>
+        </div>
+      </div>`).join('') + '</div>';
+  }
+}
+loadExamData();
+</script>{% endblock %}

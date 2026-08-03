@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Login — Smart College Assistant{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-bg-grid"></div>
+  <div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+      <div class="col-lg-5 col-md-7">
+        <div class="auth-card">
+          <div class="auth-header text-center">
+            <div class="auth-logo">
+              <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <h2 class="auth-title">Welcome Back</h2>
+            <p class="auth-subtitle">Sign in to Smart College Assistant</p>
+          </div>
+
+          <!-- Demo Credentials -->
+          <div class="demo-credentials mb-4">
+            <div class="demo-cred-title"><i class="bi bi-info-circle me-1"></i>Demo Credentials</div>
+            <div class="demo-cred-grid">
+              <button class="demo-btn" onclick="fillDemo('admin','Admin@123')">
+                <i class="bi bi-shield-fill me-1"></i>Admin
+              </button>
+              <button class="demo-btn" onclick="fillDemo('cs001','Student@123')">
+                <i class="bi bi-person-fill me-1"></i>Student
+              </button>
+              <button class="demo-btn" onclick="fillDemo('fac001','Faculty@123')">
+                <i class="bi bi-person-badge-fill me-1"></i>Faculty
+              </button>
+            </div>
+          </div>
+
+          <form id="loginForm">
+            <div class="mb-3">
+              <label class="form-label-styled">Username or Email</label>
+              <div class="input-group-styled">
+                <i class="bi bi-person-fill input-icon"></i>
+                <input type="text" id="username" class="form-input-styled" placeholder="Enter your username" autocomplete="username" required />
+              </div>
+            </div>
+            <div class="mb-4">
+              <label class="form-label-styled">Password</label>
+              <div class="input-group-styled">
+                <i class="bi bi-lock-fill input-icon"></i>
+                <input type="password" id="password" class="form-input-styled" placeholder="Enter your password" autocomplete="current-password" required />
+                <button type="button" class="input-eye" onclick="togglePassword('password')">
+                  <i class="bi bi-eye" id="password-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary-glow w-100 mb-3" id="loginBtn">
+              <span id="loginBtnText"><i class="bi bi-box-arrow-in-right me-2"></i>Sign In</span>
+              <span id="loginBtnLoader" class="d-none">
+                <div class="spinner-border spinner-border-sm me-2"></div>Authenticating...
+              </span>
+            </button>
+          </form>
+
+          <div class="auth-footer">
+            <a href="/" class="auth-link"><i class="bi bi-arrow-left me-1"></i>Back to Home</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function fillDemo(user, pass) {
+  document.getElementById('username').value = user;
+  document.getElementById('password').value = pass;
+  document.getElementById('username').dispatchEvent(new Event('input'));
+}
+
+function togglePassword(id) {
+  const inp = document.getElementById(id);
+  const eye = document.getElementById(id + '-eye');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  eye.className = inp.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  if (!username || !password) { showToast('Please fill in all fields.', 'warning'); return; }
+
+  const btn = document.getElementById('loginBtn');
+  document.getElementById('loginBtnText').classList.add('d-none');
+  document.getElementById('loginBtnLoader').classList.remove('d-none');
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'include',
+      body: JSON.stringify({username, password}),
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.message, 'success');
+      setTimeout(() => { window.location.href = '/dashboard'; }, 800);
+    } else {
+      showToast(data.error || 'Login failed.', 'danger');
+    }
+  } catch (err) {
+    showToast('Network error. Please try again.', 'danger');
+  } finally {
+    document.getElementById('loginBtnText').classList.remove('d-none');
+    document.getElementById('loginBtnLoader').classList.add('d-none');
+    btn.disabled = false;
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}{% block title %}Timetable — Smart College Assistant{% endblock %}
+{% block content %}
+<section class="page-hero timetable-hero"><div class="container"><div class="page-hero-content">
+  <span class="section-badge">Academic Schedule</span>
+  <h1 class="page-hero-title">Class Timetable</h1>
+  <p class="page-hero-desc">View daily and weekly schedules for all departments and semesters.</p>
+</div></div></section>
+
+<section class="section-pad"><div class="container">
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <label class="form-label-styled">Department</label>
+      <select id="deptSelect" class="form-input-styled" onchange="loadTimetable()">
+        <option value="CS">Computer Science & Engineering</option>
+        <option value="ECE">Electronics & Communication</option>
+        <option value="MECH">Mechanical Engineering</option>
+        <option value="IT">Information Technology</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label-styled">Semester</label>
+      <select id="semSelect" class="form-input-styled" onchange="loadTimetable()">
+        {% for s in range(1,9) %}<option value="{{ s }}" {% if s == 5 %}selected{% endif %}>Semester {{ s }}</option>{% endfor %}
+      </select>
+    </div>
+  </div>
+  <div id="timetableContainer"><div class="text-center py-5"><div class="spinner-border text-primary"></div></div></div>
+</div></section>
+{% endblock %}
+{% block extra_scripts %}<script>
+async function loadTimetable() {
+  const dept = document.getElementById('deptSelect').value;
+  const sem = document.getElementById('semSelect').value;
+  const container = document.getElementById('timetableContainer');
+  container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+  const res = await fetch(`/api/timetable/?dept=${dept}&semester=${sem}`);
+  const data = await res.json();
+  if (!data.success || !Object.keys(data.timetable).length) {
+    container.innerHTML = '<p class="text-muted text-center py-5">No timetable data available for this selection.</p>'; return;
+  }
+  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const today = new Date().toLocaleString('en-us',{weekday:'long'});
+  let html = '<div class="timetable-grid">';
+  for (const day of days) {
+    if (!data.timetable[day]) continue;
+    const isToday = day === today;
+    html += `<div class="tt-day-block ${isToday ? 'tt-today' : ''}">
+      <div class="tt-day-header">${day}${isToday ? ' <span class="badge bg-primary ms-2">Today</span>' : ''}</div>
+      <div class="tt-slots">`;
+    for (const slot of data.timetable[day]) {
+      html += `<div class="tt-slot tt-${slot.type}">
+        <div class="tt-time">${slot.time}</div>
+        <div class="tt-course">${slot.course}</div>
+        <div class="tt-meta"><i class="bi bi-person me-1"></i>${slot.faculty} · <i class="bi bi-door-open me-1"></i>${slot.room}</div>
+      </div>`;
+    }
+    html += '</div></div>';
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+loadTimetable();
+</script>{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}{% block title %}Notifications — Smart College Assistant{% endblock %}
+{% block content %}
+<section class="page-hero notif-hero"><div class="container"><div class="page-hero-content">
+  <span class="section-badge">Stay Updated</span>
+  <h1 class="page-hero-title">Notifications & Announcements</h1>
+  <p class="page-hero-desc">Latest notices, events, placement drives, and academic updates.</p>
+</div></div></section>
+<section class="section-pad"><div class="container">
+  <div class="d-flex flex-wrap gap-2 mb-4" id="categoryFilter">
+    {% for cat in ['all','exam','placement','event','general'] %}
+    <button class="filter-btn {% if cat == 'all' %}active{% endif %}" onclick="filterNotifs('{{ cat }}', this)">{{ cat | capitalize }}</button>
+    {% endfor %}
+  </div>
+  <div id="notifList"><div class="text-center py-5"><div class="spinner-border text-primary"></div></div></div>
+</div></section>
+{% endblock %}
+{% block extra_scripts %}<script>
+let allNotifs = [];
+async function loadNotifications(category='all') {
+  const res = await fetch(`/api/notifications/?category=${category}`);
+  const data = await res.json();
+  if (!data.success) return;
+  allNotifs = data.notifications;
+  renderNotifs(allNotifs);
+}
+function renderNotifs(notifs) {
+  const colors = {exam:'danger',placement:'warning',event:'info',general:'primary',default:'secondary'};
+  document.getElementById('notifList').innerHTML = notifs.length ? notifs.map(n => `
+    <div class="notif-card notif-${n.priority} mb-3">
+      <div class="notif-header">
+        <span class="notif-badge badge-${colors[n.category]||'secondary'}">${n.category}</span>
+        <span class="notif-priority priority-${n.priority}">${n.priority}</span>
+        <span class="notif-date">${new Date(n.created_at).toLocaleDateString()}</span>
+      </div>
+      <h6 class="notif-title">${n.title}</h6>
+      ${n.content ? `<p class="notif-content">${n.content}</p>` : ''}
+    </div>`).join('') : '<p class="text-muted text-center py-4">No notifications found.</p>';
+}
+function filterNotifs(cat, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadNotifications(cat);
+}
+loadNotifications();
+</script>{% endblock %}

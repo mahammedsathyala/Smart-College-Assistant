@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Placement Cell — Smart College Assistant{% endblock %}
+{% block content %}
+<section class="page-hero placement-hero">
+  <div class="container">
+    <div class="page-hero-content">
+      <span class="section-badge">Campus Recruitment 2026</span>
+      <h1 class="page-hero-title">Placement Cell</h1>
+      <p class="page-hero-desc">Connecting students with top companies. 78% placement rate. Highest package: 24 LPA.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section-pad">
+  <div class="container">
+    <!-- Stats Row -->
+    <div class="row g-3 mb-5" id="placementStats">
+      <div class="col-12 text-center"><div class="spinner-border text-primary"></div></div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Upcoming Drives -->
+      <div class="col-lg-8">
+        <div class="content-card mb-4">
+          <div class="content-card-header">
+            <h5><i class="bi bi-calendar-event me-2"></i>Upcoming Placement Drives</h5>
+          </div>
+          <div class="content-card-body" id="drivesList">
+            <div class="text-center py-3"><div class="spinner-border text-primary"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar Tools -->
+      <div class="col-lg-4">
+        <div class="content-card mb-4">
+          <div class="content-card-header"><h5><i class="bi bi-check2-circle me-2"></i>Eligibility Checker</h5></div>
+          <div class="content-card-body">
+            <form id="eligibilityForm">
+              <div class="mb-3">
+                <label class="form-label-styled">Your CGPA</label>
+                <input type="number" id="eligCgpa" class="form-input-styled" step="0.01" min="0" max="10" placeholder="e.g. 8.5" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label-styled">Active Backlogs</label>
+                <input type="number" id="eligBacklogs" class="form-input-styled" min="0" value="0" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label-styled">Company Min. CGPA</label>
+                <input type="number" id="eligMinCgpa" class="form-input-styled" step="0.1" value="6.0" />
+              </div>
+              <button type="submit" class="btn-primary-glow w-100">Check Eligibility</button>
+            </form>
+            <div id="eligibilityResult" class="mt-3"></div>
+          </div>
+        </div>
+
+        <div class="cta-card">
+          <h6><i class="bi bi-robot me-2"></i>AI Interview Prep</h6>
+          <p class="small">Get personalized interview questions and tips from our AI assistant.</p>
+          <a href="/chatbot" class="btn-primary-glow w-100 btn-sm">
+            <i class="bi bi-chat-dots me-2"></i>Start Prep
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function loadPlacementData() {
+  try {
+    const [statsRes, drivesRes] = await Promise.all([
+      fetch('/api/placement/statistics'), fetch('/api/placement/drives')
+    ]);
+    const stats = await statsRes.json();
+    const drives = await drivesRes.json();
+
+    if (stats.success) {
+      const s = stats.stats;
+      document.getElementById('placementStats').innerHTML = `
+        <div class="col-lg-3 col-6"><div class="kpi-card kpi-primary text-center"><div class="kpi-value">${s.placed}</div><div class="kpi-label">Students Placed</div></div></div>
+        <div class="col-lg-3 col-6"><div class="kpi-card kpi-success text-center"><div class="kpi-value">${s.placement_percentage}%</div><div class="kpi-label">Placement Rate</div></div></div>
+        <div class="col-lg-3 col-6"><div class="kpi-card kpi-warning text-center"><div class="kpi-value">₹${s.average_package_lpa} LPA</div><div class="kpi-label">Average Package</div></div></div>
+        <div class="col-lg-3 col-6"><div class="kpi-card kpi-info text-center"><div class="kpi-value">₹${s.highest_package_lpa} LPA</div><div class="kpi-label">Highest Package</div></div></div>
+      `;
+    }
+
+    if (drives.success && drives.drives.length > 0) {
+      document.getElementById('drivesList').innerHTML = drives.drives.map(d => `
+        <div class="drive-card mb-3">
+          <div class="drive-header">
+            <div class="drive-company">${d.company}</div>
+            <span class="badge-status badge-${d.status === 'upcoming' ? 'info' : 'success'}">${d.status}</span>
+          </div>
+          <div class="drive-details row g-2 mt-1">
+            <div class="col-6"><i class="bi bi-briefcase me-1 text-primary"></i>${d.role}</div>
+            <div class="col-6"><i class="bi bi-currency-rupee me-1 text-success"></i>${d.package > 0 ? d.package + ' LPA' : 'Intern'}</div>
+            <div class="col-6"><i class="bi bi-calendar me-1 text-warning"></i>${d.date}</div>
+            <div class="col-6"><i class="bi bi-bar-chart me-1 text-info"></i>Min CGPA: ${d.min_cgpa}</div>
+          </div>
+          <div class="mt-2 d-flex gap-2">
+            <span class="dept-badge">${d.departments}</span>
+            <small class="text-muted ms-auto">Deadline: ${d.registration_deadline}</small>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      document.getElementById('drivesList').innerHTML = '<p class="text-muted text-center py-3">No upcoming drives at the moment.</p>';
+    }
+  } catch(e) { console.error(e); }
+}
+
+document.getElementById('eligibilityForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = {
+    cgpa: parseFloat(document.getElementById('eligCgpa').value),
+    backlogs: parseInt(document.getElementById('eligBacklogs').value),
+    required_cgpa: parseFloat(document.getElementById('eligMinCgpa').value),
+  };
+  const res = await fetch('/api/placement/eligibility-check', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data),
+  });
+  const result = await res.json();
+  if (result.success) {
+    const r = result;
+    document.getElementById('eligibilityResult').innerHTML = `
+      <div class="alert ${r.eligible ? 'alert-success' : 'alert-danger'} rounded-3">
+        <strong>${r.message}</strong>
+        ${r.suggestions.length ? '<ul class="mt-2 mb-0">' + r.suggestions.map(s=>`<li>${s}</li>`).join('') + '</ul>' : ''}
+      </div>
+    `;
+  }
+});
+
+loadPlacementData();
+</script>
+{% endblock %}

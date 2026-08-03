@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Smart Tools — Smart College Assistant{% endblock %}
+{% block content %}
+<section class="page-hero tools-hero">
+  <div class="container">
+    <div class="page-hero-content">
+      <span class="section-badge">AI-Powered Calculators</span>
+      <h1 class="page-hero-title">Smart Tools</h1>
+      <p class="page-hero-desc">Calculate CGPA, track attendance, analyze your resume, and plan your studies.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section-pad">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- CGPA Calculator -->
+      <div class="col-lg-6">
+        <div class="tool-card">
+          <div class="tool-header"><i class="bi bi-calculator tool-icon text-primary"></i><h5>CGPA Calculator</h5></div>
+          <div class="tool-body">
+            <div id="cgpaSubjects">
+              <div class="subject-row row g-2 mb-2">
+                <div class="col-5"><input class="form-input-styled" placeholder="Subject Name" name="subName" /></div>
+                <div class="col-4">
+                  <select class="form-input-styled" name="grade">
+                    <option value="O">O — 10.0</option><option value="A+">A+ — 9.0</option>
+                    <option value="A">A — 8.0</option><option value="B+">B+ — 7.0</option>
+                    <option value="B">B — 6.0</option><option value="C">C — 5.0</option>
+                    <option value="F">F — 0.0</option>
+                  </select>
+                </div>
+                <div class="col-3"><input class="form-input-styled" type="number" placeholder="Credits" name="credits" min="1" max="5" value="4" /></div>
+              </div>
+            </div>
+            <button class="btn btn-outline-primary btn-sm mb-3" onclick="addSubject()"><i class="bi bi-plus me-1"></i>Add Subject</button>
+            <button class="btn-primary-glow w-100" onclick="calculateCGPA()"><i class="bi bi-calculator me-2"></i>Calculate CGPA</button>
+            <div id="cgpaResult" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendance Calculator -->
+      <div class="col-lg-6">
+        <div class="tool-card">
+          <div class="tool-header"><i class="bi bi-person-check tool-icon text-success"></i><h5>Attendance Calculator</h5></div>
+          <div class="tool-body">
+            <div class="mb-3">
+              <label class="form-label-styled">Classes Attended (Present)</label>
+              <input type="number" id="attPresent" class="form-input-styled" min="0" value="18" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label-styled">Total Classes Conducted</label>
+              <input type="number" id="attTotal" class="form-input-styled" min="0" value="24" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label-styled">Required Percentage</label>
+              <input type="number" id="attRequired" class="form-input-styled" value="75" min="0" max="100" />
+            </div>
+            <button class="btn-primary-glow w-100" onclick="calculateAttendance()"><i class="bi bi-percent me-2"></i>Calculate</button>
+            <div id="attendanceResult" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resume Analyzer -->
+      <div class="col-lg-6">
+        <div class="tool-card">
+          <div class="tool-header"><i class="bi bi-file-person tool-icon text-warning"></i><h5>Resume Analyzer</h5></div>
+          <div class="tool-body">
+            <p class="text-muted small">Paste your resume text for an instant AI analysis and score.</p>
+            <textarea id="resumeText" class="form-input-styled" rows="6" placeholder="Paste your resume text here..."></textarea>
+            <button class="btn-primary-glow w-100 mt-2" onclick="analyzeResume()"><i class="bi bi-search me-2"></i>Analyze Resume</button>
+            <div id="resumeResult" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exam Countdown -->
+      <div class="col-lg-6">
+        <div class="tool-card">
+          <div class="tool-header"><i class="bi bi-clock-history tool-icon text-danger"></i><h5>Exam Countdown</h5></div>
+          <div class="tool-body">
+            <div class="countdown-grid" id="examCountdowns">
+              <!-- Rendered by JS from exam schedule -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// CGPA Calculator
+function addSubject() {
+  const container = document.getElementById('cgpaSubjects');
+  const row = document.createElement('div');
+  row.className = 'subject-row row g-2 mb-2';
+  row.innerHTML = `
+    <div class="col-5"><input class="form-input-styled" placeholder="Subject Name" name="subName" /></div>
+    <div class="col-4"><select class="form-input-styled" name="grade">
+      <option value="O">O — 10.0</option><option value="A+">A+ — 9.0</option>
+      <option value="A">A — 8.0</option><option value="B+">B+ — 7.0</option>
+      <option value="B">B — 6.0</option><option value="C">C — 5.0</option>
+      <option value="F">F — 0.0</option></select></div>
+    <div class="col-2"><input class="form-input-styled" type="number" placeholder="Cred" name="credits" min="1" max="5" value="3" /></div>
+    <div class="col-1"><button class="btn btn-sm btn-outline-danger" onclick="this.closest('.subject-row').remove()"><i class="bi bi-x"></i></button></div>
+  `;
+  container.appendChild(row);
+}
+
+async function calculateCGPA() {
+  const rows = document.querySelectorAll('.subject-row');
+  const subjects = [];
+  rows.forEach(r => {
+    const name = r.querySelector('[name=subName]')?.value || 'Subject';
+    const grade = r.querySelector('[name=grade]')?.value;
+    const credits = parseInt(r.querySelector('[name=credits]')?.value || 3);
+    if (grade) subjects.push({name, grade, credits});
+  });
+  if (!subjects.length) { showToast('Add at least one subject.', 'warning'); return; }
+  const res = await fetch('/api/exam/cgpa-calculator', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({subjects}),
+  });
+  const data = await res.json();
+  if (data.success) {
+    const grade = data.cgpa >= 9 ? 'O' : data.cgpa >= 8 ? 'A+' : data.cgpa >= 7 ? 'A' : data.cgpa >= 6 ? 'B+' : 'B';
+    document.getElementById('cgpaResult').innerHTML = `
+      <div class="result-box result-${data.cgpa >= 7.5 ? 'success' : 'warning'}">
+        <div class="result-main">CGPA: <strong>${data.cgpa}</strong> (${grade} Grade)</div>
+        <div class="result-sub">Total Credits: ${data.total_credits}</div>
+      </div>
+    `;
+  }
+}
+
+async function calculateAttendance() {
+  const present = parseInt(document.getElementById('attPresent').value);
+  const total = parseInt(document.getElementById('attTotal').value);
+  const needed = parseFloat(document.getElementById('attRequired').value);
+  const res = await fetch('/api/exam/attendance-calculator', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({present, total, needed_percentage: needed}),
+  });
+  const data = await res.json();
+  if (data.success) {
+    const ok = data.percentage >= data.required;
+    document.getElementById('attendanceResult').innerHTML = `
+      <div class="result-box result-${ok ? 'success' : 'danger'}">
+        <div class="result-main">${data.percentage}% — ${data.status}</div>
+        ${ok ? `<div class="result-sub">You can miss ${data.can_miss} more class(es).</div>` :
+               `<div class="result-sub">Attend ${data.classes_needed} more class(es) to be safe.</div>`}
+      </div>
+    `;
+  }
+}
+
+async function analyzeResume() {
+  const text = document.getElementById('resumeText').value.trim();
+  if (!text) { showToast('Please paste your resume text.', 'warning'); return; }
+  // Rule-based client analysis
+  const sections = ['education','experience','skills','projects','achievement','contact'];
+  const found = sections.filter(s => text.toLowerCase().includes(s));
+  const score = Math.min(100, found.length * 15 + (text.split(' ').length > 300 ? 10 : 0));
+  const color = score >= 80 ? 'success' : score >= 60 ? 'warning' : 'danger';
+  document.getElementById('resumeResult').innerHTML = `
+    <div class="result-box result-${color}">
+      <div class="result-main">Resume Score: <strong>${score}/100</strong></div>
+      <div class="result-sub">Sections found: ${found.map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join(', ')}</div>
+      <div class="result-sub mt-1">${score < 80 ? 'Tip: Add more quantifiable achievements and action verbs.' : 'Great resume structure!'}</div>
+    </div>
+  `;
+}
+
+// Exam countdown
+(async function() {
+  const res = await fetch('/api/exam/schedule');
+  const data = await res.json();
+  if (!data.success) return;
+  const container = document.getElementById('examCountdowns');
+  container.innerHTML = data.schedule.map(s => {
+    const days = Math.max(0, Math.ceil((new Date(s.date) - new Date()) / 86400000));
+    const color = days <= 7 ? 'danger' : days <= 14 ? 'warning' : 'primary';
+    return `
+      <div class="countdown-item border-${color}">
+        <div class="countdown-days text-${color}">${days}</div>
+        <div class="countdown-label">days</div>
+        <div class="countdown-subject">${s.subject}</div>
+        <div class="countdown-date text-muted">${s.date}</div>
+      </div>
+    `;
+  }).join('');
+})();
+</script>
+{% endblock %}

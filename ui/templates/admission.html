@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block title %}Admissions — Smart College Assistant{% endblock %}
+{% block content %}
+<section class="page-hero admission-hero">
+  <div class="container">
+    <div class="page-hero-content">
+      <span class="section-badge">Applications Open 2026-27</span>
+      <h1 class="page-hero-title">Admissions</h1>
+      <p class="page-hero-desc">Join Smart Engineering College — A place where innovation meets excellence. NAAC A+ Accredited.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section-pad">
+  <div class="container">
+    <div class="row g-4">
+      <!-- Programs -->
+      <div class="col-lg-8">
+        <div class="content-card mb-4">
+          <div class="content-card-header"><h5><i class="bi bi-mortarboard me-2"></i>Programs Offered</h5></div>
+          <div class="content-card-body">
+            <div class="row g-3" id="programsList">
+              <div class="col-12 text-center py-3"><div class="spinner-border text-primary"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Process Steps -->
+        <div class="content-card mb-4">
+          <div class="content-card-header"><h5><i class="bi bi-list-ol me-2"></i>Admission Process</h5></div>
+          <div class="content-card-body">
+            <div class="process-steps">
+              {% set steps = [
+                {"num":"01","title":"Fill Application","desc":"Complete the online application form with accurate personal and academic details.","icon":"bi-pencil-square"},
+                {"num":"02","title":"Upload Documents","desc":"Upload scanned copies of all required documents — mark sheets, certificates, photos.","icon":"bi-upload"},
+                {"num":"03","title":"Entrance Exam","desc":"Appear for the state/college entrance examination on the scheduled date.","icon":"bi-clipboard-check"},
+                {"num":"04","title":"Counseling","desc":"Attend counseling based on your rank and select your preferred program.","icon":"bi-people-fill"},
+                {"num":"05","title":"Fee Payment","desc":"Pay the admission fee online and confirm your seat within the deadline.","icon":"bi-credit-card"},
+              ] %}
+              {% for s in steps %}
+              <div class="process-step">
+                <div class="step-num">{{ s.num }}</div>
+                <div class="step-icon"><i class="bi {{ s.icon }}"></i></div>
+                <div class="step-content">
+                  <h6 class="step-title">{{ s.title }}</h6>
+                  <p class="step-desc">{{ s.desc }}</p>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Documents Required -->
+        <div class="content-card">
+          <div class="content-card-header"><h5><i class="bi bi-file-earmark-check me-2"></i>Required Documents</h5></div>
+          <div class="content-card-body">
+            <div id="documentsList" class="row g-2">
+              <div class="col-12 text-center"><div class="spinner-border text-primary"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="col-lg-4">
+        <!-- Fee Structure -->
+        <div class="content-card mb-4">
+          <div class="content-card-header"><h5><i class="bi bi-cash-coin me-2"></i>Fee Structure</h5></div>
+          <div class="content-card-body" id="feeStructure">
+            <div class="text-center"><div class="spinner-border text-primary"></div></div>
+          </div>
+        </div>
+
+        <!-- Important Dates -->
+        <div class="content-card mb-4">
+          <div class="content-card-header"><h5><i class="bi bi-calendar-event me-2"></i>Important Dates</h5></div>
+          <div class="content-card-body" id="importantDates">
+            <div class="text-center"><div class="spinner-border text-primary"></div></div>
+          </div>
+        </div>
+
+        <!-- Quick Apply CTA -->
+        <div class="cta-card">
+          <h5><i class="bi bi-rocket-takeoff me-2"></i>Apply Now</h5>
+          <p>Take the first step toward your engineering career.</p>
+          <button class="btn-primary-glow w-100" data-bs-toggle="modal" data-bs-target="#applyModal">
+            <i class="bi bi-send me-2"></i>Submit Application
+          </button>
+          <div class="mt-2 text-center">
+            <small>Need help? <a href="/chatbot" class="cta-link">Ask our AI Assistant</a></small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Apply Modal -->
+<div class="modal fade" id="applyModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content glass-modal">
+      <div class="modal-header border-0">
+        <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Admission Application</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="admissionForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label-styled">Full Name *</label>
+              <input type="text" class="form-input-styled" name="applicant_name" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label-styled">Email Address *</label>
+              <input type="email" class="form-input-styled" name="email" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label-styled">Phone Number *</label>
+              <input type="tel" class="form-input-styled" name="phone" maxlength="10" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label-styled">Department *</label>
+              <select class="form-input-styled" name="department_code" required>
+                <option value="">-- Select --</option>
+                <option value="CS">Computer Science & Engineering</option>
+                <option value="ECE">Electronics & Communication</option>
+                <option value="MECH">Mechanical Engineering</option>
+                <option value="IT">Information Technology</option>
+                <option value="CIVIL">Civil Engineering</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label-styled">Entrance Score *</label>
+              <input type="number" class="form-input-styled" name="entrance_score" min="0" max="100" step="0.1" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label-styled">Category *</label>
+              <select class="form-input-styled" name="category" required>
+                <option value="General">General</option>
+                <option value="OBC">OBC</option>
+                <option value="SC">SC</option>
+                <option value="ST">ST</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-4 d-flex gap-2 justify-content-end">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn-primary-glow" id="applyBtn">
+              <i class="bi bi-send me-2"></i>Submit Application
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function loadAdmissionInfo() {
+  try {
+    const res = await fetch('/api/admission/info');
+    const data = await res.json();
+    if (!data.success) return;
+    const info = data.info;
+
+    // Programs
+    const progList = document.getElementById('programsList');
+    progList.innerHTML = info.programs.map(p => `
+      <div class="col-md-6">
+        <div class="program-chip">
+          <i class="bi bi-building me-2 text-primary"></i>
+          <div><strong>${p.name}</strong><br/><small>${p.seats} seats</small></div>
+        </div>
+      </div>
+    `).join('');
+
+    // Fee structure
+    const fee = info.fee_structure;
+    document.getElementById('feeStructure').innerHTML = `
+      <div class="fee-table">
+        <div class="fee-row"><span>Tuition Fee</span><span>₹${fee.tuition_fee.toLocaleString()}</span></div>
+        <div class="fee-row"><span>Development Fee</span><span>₹${fee.development_fee.toLocaleString()}</span></div>
+        <div class="fee-row fee-row-total"><span><strong>Total / Year</strong></span><span><strong>₹${fee.total.toLocaleString()}</strong></span></div>
+      </div>
+    `;
+
+    // Important dates
+    const dates = info.important_dates;
+    document.getElementById('importantDates').innerHTML = Object.entries(dates).map(([k, v]) => `
+      <div class="date-item">
+        <i class="bi bi-calendar-check text-primary me-2"></i>
+        <div><small class="text-muted">${k.replace(/_/g,' ').toUpperCase()}</small><br/><strong>${v}</strong></div>
+      </div>
+    `).join('');
+
+    // Documents
+    document.getElementById('documentsList').innerHTML = info.required_documents.map(d => `
+      <div class="col-md-6">
+        <div class="doc-item"><i class="bi bi-file-earmark-check-fill text-success me-2"></i>${d}</div>
+      </div>
+    `).join('');
+
+  } catch(e) { console.error(e); }
+}
+
+// Application form submit
+document.getElementById('admissionForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd.entries());
+  const btn = document.getElementById('applyBtn');
+  btn.disabled = true; btn.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div>Submitting...';
+  try {
+    const res = await fetch('/api/admission/apply', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast(`Application submitted! ID: ${result.application_id}`, 'success');
+      bootstrap.Modal.getInstance(document.getElementById('applyModal')).hide();
+      e.target.reset();
+    } else { showToast(result.error, 'danger'); }
+  } catch(err) { showToast('Error submitting application.', 'danger'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-send me-2"></i>Submit Application'; }
+});
+
+loadAdmissionInfo();
+</script>
+{% endblock %}

@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  smart-college:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: smart_college_assistant
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - WATSONX_API_KEY=${WATSONX_API_KEY}
+      - WATSONX_PROJECT_ID=${WATSONX_PROJECT_ID}
+      - WATSONX_URL=${WATSONX_URL:-https://us-south.ml.cloud.ibm.com}
+      - DATABASE_URL=sqlite:///data/smart_college.db
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+    volumes:
+      - smart_college_data:/app/data
+      - smart_college_uploads:/app/uploads
+      - smart_college_vectorstore:/app/vectorstore
+      - smart_college_logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  smart_college_data:
+  smart_college_uploads:
+  smart_college_vectorstore:
+  smart_college_logs:
